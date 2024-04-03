@@ -1,4 +1,3 @@
-﻿﻿
 <!doctype html>
 <html lang="en">
 
@@ -34,7 +33,7 @@
                     <h1>OS</h1>
                     <h2>Process Scheduler</h2>
                     <!--[if IE]>
-                    <p class="center"><strong>old</strong> You are using an old browser. your browser <a href="https://browsehappy.com/">update<a>please.</p>
+                    <p class="center"><strong>old</strong> You are using an old browser. your browser <a href="https://browsehappy.com/">update<a>please.</p>
                     <![endif]-->
                 </div>
             </div>
@@ -57,7 +56,7 @@
                                 <div class="panel-body">
                                     <label for="process-1">P1</label>
                                     <div class="form-inline" id="process-1">
-                                        <label for="arrival-1">arrival time</label>
+                                        <label for="arrival-1">arriavl time</label>
                                         <input type="number" min="0" class="form-control" id="arrival-1" required>
                                         <br />
                                         <label for="burst-1">burst time</label>
@@ -67,7 +66,7 @@
                             </div>
                         </div>
                         <div class="form-group right">
-                            <!-- When adding a process, a delete button is created at this location. -->
+                            <!-- When adding a process, a delete button is created at this location. -->
                             <button type="button" class="btn btn-primary" id="add-process"><span class="glyphicon glyphicon-plus"></span>add</button>
                         </div>
                     </div>
@@ -119,7 +118,7 @@
             let cntProcess = 1;
             let isRunning = false;
 
-            // Process Technique Radio Button Event
+            // Process Technique Radio Button Event
             $('input[type=radio][name=technique]').change(() => {
                 let technique = $('input[type=radio][name=technique]:checked').val();
                 if (technique === 'RR' && !isRR) {
@@ -194,7 +193,7 @@
                     bursts.push(parseInt($(`#burst-${i}`).val()));
                 }
 
-                // Create progress bar background color for each process
+                // Create progress bar background color for each process
                 let colors = [null];
                 setColors(colors, cntProcess);  // funcs.js 
 
