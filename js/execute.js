@@ -1,4 +1,5 @@
-﻿function getProcesses(cntProcess, arrivals, bursts) {
+
+function getProcesses(cntProcess, arrivals, bursts) {
     let processes = [];
     for (let i = 1; i <= cntProcess; ++i) {
         processes.push({ pid: i, arrival: arrivals[i], burst: bursts[i] });
@@ -33,13 +34,18 @@ function FCFS(cntProcess, arrivals, bursts) {
     return [waitings, turnArounds, pStates];
 }
 
-
+/***************************************************
+ *
+ *  RR
+ *
+ ***************************************************/
 function RR(cntProcess, arrivals, bursts, delta) {
     let processes = getProcesses(cntProcess, arrivals, bursts);
     // remain 
     processes = processes.map(p => {
         return { pid: p.pid, arrival: p.arrival, burst: p.burst, remain: p.burst };
     });
+    
     processes.sort((a, b) => a.arrival - b.arrival ? a.arrival - b.arrival : a.pid - b.pid);
     let time = 0;
     let waitings = [null], turnArounds = [null], pStates = [];
@@ -54,7 +60,7 @@ function RR(cntProcess, arrivals, bursts, delta) {
                 turnArounds[now.pid] = time - now.arrival;
                 waitings[now.pid] = turnArounds[now.pid] - now.burst;
                 readyQ.shift();
-            } else {  
+            } else { 
                 pStates.push([now.pid, time, delta]);
                 time += delta;
                 now.remain -= delta;
@@ -75,9 +81,60 @@ function RR(cntProcess, arrivals, bursts, delta) {
     return [waitings, turnArounds, pStates];
 }
 
+/***************************************************
+ *
+ *  SPN
+ *
+ ***************************************************/
+function SPN(cntProcess, arrivals, bursts) {
+    let processes = getProcesses(cntProcess, arrivals, bursts);
+    let waitings = [null], turnArounds = [null], pStates = [];
+    let time = 0;
+
+    while (1) {
+        let readyQ = [], fastTime = Infinity;
+        for (let i = 0; i < cntProcess; ++i) if (processes[i].burst > 0) {
+            fastTime = Math.min(fastTime, processes[i].arrival);
+            if (processes[i].arrival <= time) readyQ.push(i);
+        }
+
+        if (fastTime === Infinity) break;
+
+        if (readyQ.length == 0) {
+            pStates.push([null, time, fastTime - time]);
+            time = fastTime;
+        }
+        else {
+            let len = Infinity, idx = -1;
+            for (let i = 0; i < readyQ.length; ++i) {
+                let now = processes[readyQ[i]];
+                let nowLen = now.burst;
+
+                if (len > nowLen || len == nowLen && now.pid < processes[idx].pid) {
+                    len = nowLen;
+                    idx = readyQ[i];
+                }
+            }
+
+            let now = processes[idx];
+            pStates.push([now.pid, time, now.burst]);
+            time += now.burst;
+            turnArounds[now.pid] = time - now.arrival;
+            waitings[now.pid] = turnArounds[now.pid] - now.burst;
+
+            now.burst = 0;
+        }
+    }
+
+    return [waitings, turnArounds, pStates];
+}
 
 
-
+/***************************************************
+ *
+ *  SRTN
+ *
+ ***************************************************/
 function SRTN(cntProcess, arrivals, bursts) {
     let processes = getProcesses(cntProcess, arrivals, bursts);
     let waitings = [null], turnArounds = [null], pStates = [];
@@ -90,7 +147,7 @@ function SRTN(cntProcess, arrivals, bursts) {
     arrivals.sort((a, b) => a - b);
 
     for (let i = 0; i < arrivals.length - 1; ++i) {
-        
+       
         let eventTime = arrivals[i];
         let readyQ = [];
         let nextTime = arrivals[i + 1];
@@ -98,7 +155,7 @@ function SRTN(cntProcess, arrivals, bursts) {
         for (let j = 0; j < cntProcess; ++j)
             if (processes[j].arrival <= eventTime && processes[j].burst > 0) readyQ.push(j);
 
-        
+       
         while (time < nextTime) {
             if (time < eventTime) {
                 pStates.push([null, time, eventTime - time]);
@@ -116,7 +173,7 @@ function SRTN(cntProcess, arrivals, bursts) {
 
             if (idx === -1) break;
 
-            
+            // idx
             let exec = Math.min(nextTime - time, processes[idx].burst);
             pStates.push([processes[idx].pid, time, exec]);
             time += exec;
@@ -142,11 +199,60 @@ function SRTN(cntProcess, arrivals, bursts) {
 }
 
 
+/***************************************************
+ *
+ *  HRRN
+ *
+ ***************************************************/
+function HRRN(cntProcess, arrivals, bursts) {
+    let processes = getProcesses(cntProcess, arrivals, bursts);
+    let waitings = [null], turnArounds = [null], pStates = [];
+    let time = 0;
+
+    while (true) {
+        let readyQ = [], fastTime = Infinity;
+        for (let i = 0; i < cntProcess; ++i)
+            if (processes[i].burst > 0) {
+                fastTime = Math.min(fastTime, processes[i].arrival);
+                if (processes[i].arrival <= time)
+                    readyQ.push(i);
+            }
+
+        if (fastTime === Infinity) break;
+
+        if (readyQ.length == 0) {
+            pStates.push([null, time, fastTime - time]);
+            time = fastTime;
+        }
+        else {
+            let hrrn = 0, idx = -1;
+            for (let i = 0; i < readyQ.length; ++i) {
+                let now = processes[readyQ[i]];
+                let nowHrrn = (time - now.arrival + now.burst) / now.burst;
+
+                if (nowHrrn > hrrn || nowHrrn == hrrn && now.pid < processes[idx].pid) {
+                    hrrn = nowHrrn;
+                    idx = readyQ[i];
+                }
+            }
+
+            let now = processes[idx];
+            pStates.push([now.pid, time, now.burst]);
+            time += now.burst;
+            turnArounds[now.pid] = time - now.arrival;
+            waitings[now.pid] = turnArounds[now.pid] - now.burst;
+
+            now.burst = 0;
+        }
+    }
+
+    return [waitings, turnArounds, pStates];
+}
 
 function InfinityGauntlet(cntProcess, arrivals, bursts) {
     let processes = getProcesses(cntProcess, arrivals, bursts);
 
-    
+   
     processes.sort(() => Math.random() - 0.5);
     let killed = []; 
     let killCnt = Math.floor(cntProcess / 2);
