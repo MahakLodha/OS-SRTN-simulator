@@ -1,4 +1,3 @@
-
 function getProcesses(cntProcess, arrivals, bursts) {
     let processes = [];
     for (let i = 1; i <= cntProcess; ++i) {
